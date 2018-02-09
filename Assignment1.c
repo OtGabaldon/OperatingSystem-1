@@ -8,7 +8,14 @@
 */
 
 // Reads input from file inside the directory
-void readInput();
+
+struct process {
+	char name[100];
+	int arrival;
+	int burst;
+};
+
+void readInput(int *proccessCount, int* runTime, int *quantum, char runType[10],struct process list[100]);
 
 
 #include <stdio.h>
@@ -16,18 +23,22 @@ void readInput();
 #include <stdlib.h>
 
 int main () {
+	int proccessCount, runTime,quantum=0,i;
+	char runType[10];
+	struct process processList[100];
 	
-	readInput();
+	readInput(&proccessCount,&runTime,&quantum,runType,processList);
 	
 	return 0;
 }
 
 
-void readInput(){
+void readInput(int *proccessCount, int *runTime, int *quantum, char runType[10], struct process list[100]){
 	
-	int run=1,i,skip=0;
+	int run=1,i,k=0,skip=0,processCounter=0;
 	char word[20]; // used to check what action is being preformed
 	char letter[2]; // used to construct words
+	char temp[10];
 	
 	//open file
 	FILE *fp;
@@ -69,25 +80,104 @@ void readInput(){
 		
 		//printf("|%s| \n",word);
 		if(strcmp(word,"processcount")==0){
-			printf("process\n");
+			
+			while((temp[k]=fgetc(fp))!=' '){
+				k++;
+			}
+			
+			temp[k]='\0';
+			*proccessCount = atoi(temp);// turning char into int.
+			
+			//Cleaning up temp.
+			temp[0]='\0';
+			k=0;
 		}
 		else if(strcmp(word,"runfor")==0){
-			printf("runfor\n");
+			
+			// gets whole number because it can be multiple chars
+			while((temp[k]=fgetc(fp))!=' '){
+				k++;
+			}
+			
+			temp[k]='\0';
+			*runTime = atoi(temp);
+			
+			//Cleaning up temp.
+			temp[0]='\0';
+			k=0;
 		}
 		else if(strcmp(word,"use")==0){
-			printf("use\n");
+			
+			//Copying over whole type string into temp variable.
+			while((temp[k]=fgetc(fp))!=' '){
+				k++;
+			}
+			//Copying over temp to runType.
+			temp[k]='\0';
+			strcpy(runType,temp);
+			
+			//Cleaning up temp.
+			temp[0]='\0';
+			k=0;
+			
 		}
 		else if(strcmp(word,"quantum")==0){
-			printf("quantum\n");
+			
+			while((temp[k]=fgetc(fp))!=' '){
+				k++;
+			}
+			
+			temp[k]='\0';
+			*quantum = atoi(temp);
+			
+		
+			//Cleaning up temp.
+			temp[0]='\0';
+			k=0;
 		}
 		else if(strcmp(word,"name")==0){
-			printf("name\n");
+			
+			while((temp[k]=fgetc(fp))!=' '){
+				k++;
+			}
+			//create new struct.
+			struct process procTemp;
+			
+			//copy name to process
+			strcpy(procTemp.name,temp);
+			
+			//assign temp to array and clean up temp.
+			list[processCounter]=procTemp;
+			temp[0]='\0';
+			k=0;
 		}
 		else if(strcmp(word,"arrival")==0){
-			printf("arrival\n");
+			
+			while((temp[k]=fgetc(fp))!=' '){
+				k++;
+			}
+			
+			list[processCounter].arrival=atoi(temp);
+			
+			
+			temp[0]='\0';
+			k=0;
 		}
 		else if(strcmp(word,"burst")==0){
-			printf("burst\n");
+			
+			
+			while((temp[k]=fgetc(fp))!='\n'){
+				k++;
+			}
+			
+			list[processCounter].burst=atoi(temp);
+			
+			//Burst should be the last info entered for proccess.
+			processCounter++;
+			
+			//Clean up temp.
+			temp[0]='\0';
+			k=0;
 		}
 		else if(strcmp(word,"end")==0){ //program input ends
 				printf("end");
