@@ -21,15 +21,54 @@ char algorithm[100];
 int numProcs, runTime, quantum;
 Process* procs;
 
+void fcfs();
+void sjf();
+void rr();
+void printHeader();
 void readInput();
 
 int main () {
 
 	readInput();
 	
+	if(strcmp(algorithm, "fcfs") == 0)
+		fcfs();
+	else if(strcmp(algorithm, "sjf") == 0)
+		sjf();
+	else if(strcmp(algorithm, "rr") == 0)
+		rr();
+	
 	return 0;
 }
 
+// First-Come First-Serve
+void fcfs() {
+
+}
+
+// Shortest Job First (preemptive)
+void sjf() {
+
+}
+
+// Round-Robin
+void rr() {
+	
+}
+
+// Prints out header for all algorithms
+void printHeader() {
+
+	printf("%d processes\n", numProcs);
+	printf("Using %s\n", algorithm);
+	
+	if(strcmp(algorithm, "rr") == 0)
+		printf("Quantum %d\n", quantum);
+		
+	printf("\n\n");
+}
+
+// Processes input from input file
 void readInput() {
 	FILE* ifp;
 	int i;
