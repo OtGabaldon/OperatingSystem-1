@@ -1,38 +1,64 @@
-/* Operating System 
-   Assignment 1
+/* 
+   Programming Assignment 1
    2/9/2018
-   COP4600
+   COP4600 Operating Systems
    Ot Gabaldon
    Kiara Crawford
    Nick Deleuze 
 */
 
-// Reads input from file inside the directory
-
-struct process {
-	char name[100];
-	int arrival;
-	int burst;
-};
-
-void readInput(int *proccessCount, int* runTime, int *quantum, char runType[10],struct process list[100]);
-
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
+typedef struct Process {
+	char name[100];
+	int arrival;
+	int burst;
+} Process;
+
+char algorithm[100];
+int numProcs, runTime, quantum;
+Process* procs;
+
+void readInput();
+
 int main () {
-	int proccessCount, runTime,quantum=0,i;
-	char runType[10];
-	struct process processList[100];
-	
-	readInput(&proccessCount,&runTime,&quantum,runType,processList);
+
+	readInput();
 	
 	return 0;
 }
 
+void readInput() {
+	FILE* ifp;
+	int i;
+	
+	ifp = fopen("processes.txt", "r");
+	
+	if(ifp == NULL) {
+		printf("ERROR: The input file could not be opened.\n");
+		exit(1);
+	}
 
+	fscanf(ifp, "processcount %d %*[^\n]%*c", &numProcs);
+	fscanf(ifp, "runfor %d %*[^\n]%*c", &runTime);	
+	fscanf(ifp, "use %s %*[^\n]%*c", algorithm);
+	
+	if(strcmp(algorithm, "rr") == 0)
+		fscanf(ifp, "quantum %d %*[^\n]%*c", &quantum);
+	
+	procs = malloc(sizeof(Process) * numProcs);
+	
+	for(i = 0; i < numProcs; i++)
+		fscanf(ifp, "process %*s %s arrival %d burst %d\n", procs[i].name, &procs[i].arrival, &procs[i].burst);
+	
+	fclose(ifp);
+}
+
+// Leaving original readInput method for now just in case we need to change it back.
+
+/*
 void readInput(int *proccessCount, int *runTime, int *quantum, char runType[10], struct process list[100]){
 	
 	int run=1,i,k=0,skip=0,processCounter=0;
@@ -183,10 +209,7 @@ void readInput(int *proccessCount, int *runTime, int *quantum, char runType[10],
 				printf("end");
 				run=0;
 				return;
-		}
-	
-		
-		
-	}
-	
+		}	
+	}	
 }
+*/
