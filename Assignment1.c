@@ -25,12 +25,14 @@ void fcfs();
 void sjf();
 void rr();
 void printHeader();
+void printProcessInfo();
 void readInput();
 
 int main () {
 
 	readInput();
-	
+	printHeader();
+
 	if(strcmp(algorithm, "fcfs") == 0)
 		fcfs();
 	else if(strcmp(algorithm, "sjf") == 0)
@@ -43,7 +45,51 @@ int main () {
 
 // First-Come First-Serve
 void fcfs() {
+	int procsOrderIndex[numProcs];
+	int i;
+	int lastArrival = procs[0].arrival;
+	for(i = 1; i < numProcs; i++) {
+		if(lastArrival < procs[i].arrival)
+			lastArrival = procs[i].arrival;
+	}
 
+	int procArrivalBucket[lastArrival + 1];
+	for(i = 0; i < lastArrival + 1; i++) {
+		procArrivalBucket[i] = -1;
+	}
+
+	for(i = 0; i < numProcs; i++) {
+		procArrivalBucket[procs[i].arrival] = i;
+	}
+	int iter = 0;
+	for (i = 0; i < lastArrival + 1; i++) {
+		if(procArrivalBucket[i] > -1) {
+			procsOrderIndex[iter] = procArrivalBucket[i];
+			iter++;
+		}
+	}
+	for(i = 0; i < numProcs; i++) {
+		printf("Process: %s\n    arrival: %d\n    burst: %d\n", procs[procsOrderIndex[i]].name, procs[procsOrderIndex[i]].arrival, procs[procsOrderIndex[i]].burst);
+	}
+	printf("\n");
+
+	int iter = 0;
+	for (i = 0; i < runTime i++) {
+		if(iter == numProcs) {
+			printf("Time %d: Idle\n", i);
+			break;
+		}
+		if(procs[procsOrderIndex[iter]].arrival > i) {
+			printf("Time %d: Idle\n", i);
+			i = procs[procsOrderIndex[iter]].arrival;
+		} else if (procs[procsOrderIndex[iter]].arrival == i) {
+			printf("Time %d: %s arrived", i, procs[procsOrderIndex[iter]].name);
+		}
+		if(procArrivalBucket[i] > -1) {
+			printf("Time %d: %s arrived", i, procs[procArrivalBucket[i]].name);
+		}
+	}
+	printf("Finished at time %d\n", runTime);
 }
 
 // Shortest Job First (preemptive)
@@ -66,6 +112,14 @@ void printHeader() {
 		printf("Quantum %d\n", quantum);
 		
 	printf("\n\n");
+}
+
+void printProcessInfo() {
+	int i;
+	for(i = 0; i < numProcs; i++) {
+		printf("Process: %s\n    arrival: %d\n    burst: %d\n", procs[i].name, procs[i].arrival, procs[i].burst);
+	}
+	printf("\n");
 }
 
 // Processes input from input file
