@@ -54,9 +54,10 @@ void sjf() {
 // Round-Robin ****I need to test this and make it more efficient****
 void rr() {
 	
-	int timer = 0, finished = 0, len = 0, arrival, burst, i, j, k;
+	int timer = 0, finished = 0, len = 0, running = 1, start = 0;
+	int arrival, burst, i, j, k;
 	
-	while(1)
+	while(running)
 	{
 		for(i = 0; i < numProcs; i++)
 		{
@@ -65,6 +66,8 @@ void rr() {
 		
 			if(arrival <= timer && burst > 0)
 			{
+				start = 1;
+				
 				if(arrival == timer)
 					printf("Time %d: %s arrived\n", timer, procs[i].name);
 				
@@ -99,14 +102,34 @@ void rr() {
 					finished++;
 				}
 				
-				// The machine is idle if all processes have finished.
-				if(finished == numProcs)
-					printf("Time %d: Idle\n", timer++);
+				if(finished == numProcs || timer >= runTime)
+					break;
 			}
 		}
+		
+		if(!start)
+		{
+			printf("Time %d: Idle\n", timer);
+			timer++;
+		}
 	
-		// Break the loop if all of the processes have finished.
+		// Break the loop if all of the processes have finished or if time has
+		// ran out.
 		if(finished == numProcs)
+		{		
+			if(timer < runTime)
+			{
+				for(i = timer; i < runTime; i++)
+				{
+					printf("Time %d: Idle\n", i);
+					timer++;
+				}
+			}
+
+			printf("Finished at time %d\n", timer);
+			break;
+		}
+		else if(timer >= runTime)
 		{
 			printf("Finished at time %d\n", timer);
 			break;
