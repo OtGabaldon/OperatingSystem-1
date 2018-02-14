@@ -45,83 +45,70 @@ int main () {
 
 // First-Come First-Serve
 void fcfs() {
-	int procsOrderIndex[numProcs];
-	int i;
-	int lastArrival = procs[0].arrival;
+
+	int ordered[numProcs];
+	int timer = 0, finished = 0, lastArrival, iter, arrival, burst, earliest, i, j, k;
+
+	lastArrival = procs[0].arrival;
 	for(i = 1; i < numProcs; i++) {
 		if(lastArrival < procs[i].arrival)
 			lastArrival = procs[i].arrival;
 	}
 
-	int procArrivalBucket[lastArrival + 1];
+	int arrivalBucket[lastArrival + 1];
 	for(i = 0; i < lastArrival + 1; i++) {
-		procArrivalBucket[i] = -1;
+		arrivalBucket[i] = -1;
 	}
-
 	for(i = 0; i < numProcs; i++) {
-		procArrivalBucket[procs[i].arrival] = i;
+		arrivalBucket[procs[i].arrival] = i;
 	}
-	int iter = 0;
+	iter = 0;
 	for (i = 0; i < lastArrival + 1; i++) {
-		if(procArrivalBucket[i] > -1) {
-			procsOrderIndex[iter] = procArrivalBucket[i];
+		if(arrivalBucket[i] > -1) {
+			ordered[iter] = arrivalBucket[i];
 			iter++;
 		}
 	}
-	for(i = 0; i < numProcs; i++) {
-		printf("Process: %s\n    arrival: %d\n    burst: %d\n", procs[procsOrderIndex[i]].name, procs[procsOrderIndex[i]].arrival, procs[procsOrderIndex[i]].burst);
-	}
-	printf("\n");
 
-	int iter = -1;
-	for (i = 0; i < runTime; i++) {
-		if(iter == -1) {
-			iter = 0;
-			if(procs[procsOrderIndex[iter]].arrival == i) {
-				printf("Time %d: %s arrived", i, procs[procsOrderIndex[iter]].name);
-				printf("Time %d: %s selected (burst %d)", i, procs[procsOrderIndex[iter]].name, procs[procsOrderIndex[iter]].burst);
+
+	while(1) {
+		for(i = 0; i < numProcs; i++) {
+			arrival = procs[ordered[i]].arrival;
+			burst = procs[ordered[i]].burst;
+
+			if(arrival <= timer) {
+				if(arrival == timer) {
+					printf("Time %d: %s arrived\n", timer, procs[ordered[i]].name);
+				}
+
+				printf("Time %d: %s selected (burst %d)\n", timer, procs[ordered[i]].name, burst);
+
+				for(j = timer + 1; j <= timer + procs[ordered[i]].burst; j++) {
+					for(k = 0; k < numProcs; k++) {
+						if(procs[k].arrival == j) {
+							printf("Time %d: %s arrived\n", j, procs[k].name);
+						}
+					}
+				}
+
+				timer += procs[ordered[i]].burst;
+				procs[ordered[i]].burst = 0;
+				printf("Time %d: %s finished\n", timer, procs[ordered[i]].name);
+				finished++;
+
+				if(finished == numProcs)
+					printf("Time %d: Idle\n", timer++);
 			} else {
-				printf("Time %d: Idle\n", i);
-				i = procs[procsOrderIndex[0]].arrival;
+				printf("Time %d: Idle\n", timer);
+				timer = arrival;
+				i--;
 			}
-			continue;
 		}
-
-		procs[procsOrderIndex[iter]].burst--;
-
-		if(procs[procsOrderIndex[iter]].burst == 0) {
-			printf("Time %d: %s finished", i, procs[procsOrderIndex[iter]].name);
-			iter++;
-		}
-		if(iter == numProcs - 1 && procs[procsOrderIndex[iter+1]].arrival == i) {
-			printf("Time %d: %s arrived", i, procs[procsOrderIndex[iter]].name);
-		}
-
-		///////////////////////////////////////
-
-
-		if(iter == numProcs) {
-			printf("Time %d: Idle\n", i);
+		if(finished == numProcs) {
+			printf("Finished at time %d\n", timer);
 			break;
 		}
-		if(procs[procsOrderIndex[iter]].arrival > i) {
-			printf("Time %d: Idle\n", i);
-			i = procs[procsOrderIndex[iter]].arrival;
-		} else if (procs[procsOrderIndex[iter]].arrival == i) {
-			printf("Time %d: %s arrived", i, procs[procsOrderIndex[iter]].name);
-		}
-		if(procArrivalBucket[i] > -1) {
-			printf("Time %d: %s arrived", i, procs[procArrivalBucket[i]].name);
-		}
 	}
-	printf("Finished at time %d\n", runTime);
-}
-
-void checkArrival(int i, int iter, int *arrivals) {
-	int x;
-	for(x = iter; x < numProcs; x++)
-		if(procs[arrivals[x]].arrival == i)
-			printf("Time %d: %s arrived", i, procs[arrivals[x]].name);
 }
 
 // Shortest Job First (preemptive)
