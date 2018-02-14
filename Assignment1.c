@@ -73,8 +73,33 @@ void fcfs() {
 	}
 	printf("\n");
 
-	int iter = 0;
-	for (i = 0; i < runTime i++) {
+	int iter = -1;
+	for (i = 0; i < runTime; i++) {
+		if(iter == -1) {
+			iter = 0;
+			if(procs[procsOrderIndex[iter]].arrival == i) {
+				printf("Time %d: %s arrived", i, procs[procsOrderIndex[iter]].name);
+				printf("Time %d: %s selected (burst %d)", i, procs[procsOrderIndex[iter]].name, procs[procsOrderIndex[iter]].burst);
+			} else {
+				printf("Time %d: Idle\n", i);
+				i = procs[procsOrderIndex[0]].arrival;
+			}
+			continue;
+		}
+
+		procs[procsOrderIndex[iter]].burst--;
+
+		if(procs[procsOrderIndex[iter]].burst == 0) {
+			printf("Time %d: %s finished", i, procs[procsOrderIndex[iter]].name);
+			iter++;
+		}
+		if(iter == numProcs - 1 && procs[procsOrderIndex[iter+1]].arrival == i) {
+			printf("Time %d: %s arrived", i, procs[procsOrderIndex[iter]].name);
+		}
+
+		///////////////////////////////////////
+
+
 		if(iter == numProcs) {
 			printf("Time %d: Idle\n", i);
 			break;
@@ -90,6 +115,13 @@ void fcfs() {
 		}
 	}
 	printf("Finished at time %d\n", runTime);
+}
+
+void checkArrival(int i, int iter, int *arrivals) {
+	int x;
+	for(x = iter; x < numProcs; x++)
+		if(procs[arrivals[x]].arrival == i)
+			printf("Time %d: %s arrived", i, procs[arrivals[x]].name);
 }
 
 // Shortest Job First (preemptive)
