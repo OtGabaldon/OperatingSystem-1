@@ -129,9 +129,67 @@ void sjf() {
 
 }
 
-// Round-Robin
+// Round-Robin ****I need to test this and make it more efficient****
 void rr() {
 	
+	int timer = 0, finished = 0, len = 0, arrival, burst, i, j, k;
+	
+	while(1)
+	{
+		for(i = 0; i < numProcs; i++)
+		{
+			arrival = procs[i].arrival;
+			burst = procs[i].burst;
+		
+			if(arrival <= timer && burst > 0)
+			{
+				if(arrival == timer)
+					printf("Time %d: %s arrived\n", timer, procs[i].name);
+				
+				// Determine how long the process is going to run (the quantum
+				// or its burst, whichever is smaller).
+				if(burst < quantum)
+					len = burst;
+				else
+					len = quantum;
+
+				printf("Time %d: %s selected (burst %d)\n", timer, procs[i].name, burst);
+			
+				// Update the processes' new remaining burst time.
+				procs[i].burst -= len;
+				
+				// Check if other processes arrived during the burst.
+				for(j = timer + 1; j <= timer + len; j++)
+				{
+					for(k = 0; k < numProcs; k++)
+					{
+						if(procs[k].arrival == j)
+							printf("Time %d: %s arrived\n", j, procs[k].name);
+					}
+				}
+				
+				timer += len;
+				
+				// Check if the current process has finished.
+				if(procs[i].burst == 0)
+				{
+					printf("Time %d: %s finished\n", timer, procs[i].name);
+					finished++;
+				}
+				
+				// The machine is idle if all processes have finished.
+				if(finished == numProcs)
+					printf("Time %d: Idle\n", timer++);
+			}
+		}
+	
+		// Break the loop if all of the processes have finished.
+		if(finished == numProcs)
+		{
+			printf("Finished at time %d\n", timer);
+			break;
+		}
+	}
 }
 
 // Prints out header for all algorithms
