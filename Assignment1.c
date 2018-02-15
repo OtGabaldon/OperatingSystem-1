@@ -149,13 +149,14 @@ void fcfs() {
 // Shortest Job First (preemptive)
 void sjf() {
 	
-	int i,j,k,arriveCounter=0,waitCounter=0;
+	int i,j,k,arriveCounter=0,waitCounter=0,finishedCounter=0;
 	
 	Process temp, running;
 	running.burst=-1;
 		
 	Process *order = malloc(sizeof(Process)*numProcs);
 	Process *waiting= malloc(sizeof(Process)*numProcs);
+	Process *finished= malloc(sizeof(Process)*numProcs);
 	
 	//copying procs to an array so we can keep original order later.
 	for(i=0;i<numProcs;i++){
@@ -188,6 +189,7 @@ void sjf() {
 		while(order[arriveCounter].arrival==i){
 			
 			waiting[waitCounter]=order[arriveCounter];
+			waiting[waitCounter].wait=0;
 			printf("Time %d: %s arrived\n",i,order[arriveCounter].name);
 			//process is added to wait queue, thus we need to increment counter.
 			arriveCounter++;
@@ -216,7 +218,9 @@ void sjf() {
 			if(running.burst==0){
 				
 				printf("Time %d: %s finished\n",i,running.name);
-				
+				running.turnaround=i-running.arrival;
+				finished[finishedCounter]=running;
+				finishedCounter++;
 				//signal that the program has been removed and running is empty.
 				running.burst=-1;
 			}
@@ -258,7 +262,7 @@ void sjf() {
 		
 			
 		}
-		else if(running.burst>waiting[0].burst){
+		else if(running.burst>waiting[0].burst){// if program running has longer burst than shortest in watiing.
 			
 			// insert shortest burst program into running position and then the running program back into waiting list.
 			temp=running;
@@ -281,10 +285,30 @@ void sjf() {
 			
 		}
 		
-		
+		//Increment wait time for those processes in wait array.
+		for(j=0;j<waitCounter;j++){
+			waiting[j].wait++;
+		}
 		
 	}
-	printf("Finished at time %d",runTime);
+	printf("Finished at time %d\n\n",runTime);\
+	
+	// put all the turnaround times and wait times in the correct order in the procs array.
+	for(i=0;i<finishedCounter;i++){
+		for(j=0;j<numProcs;j++){
+			if(strcmp(finished[i].name,procs[j].name)==0){
+				procs[j].wait=finished[i].wait;
+				procs[j].turnaround=finished[i].turnaround;	
+			}
+			
+		}
+		
+	}
+	//print out results.
+	for(i=0;i<numProcs;i++){
+		printf("%s wait %d turnaround %d\n",procs[i].name,procs[i].wait,procs[i].turnaround);;	
+	}
+	
 	
 	/*for(i=0;i<=runTime;i++){
 		
