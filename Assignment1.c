@@ -311,8 +311,10 @@ void rr() {
 			if(arrival <= timer && burst > 0) {
 				start = 1;
 				
-				if(arrival == timer)
-					procs[i].wait = burst;
+				if(arrival == timer) {
+					printf("Time %d: %s arrived\n", timer, procs[i].name);
+					procs[i].wait = burst;	
+				}
 				
 				// Determine how long the process is going to run (the quantum
 				// or its burst, whichever is smaller).
