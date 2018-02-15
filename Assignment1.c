@@ -341,11 +341,7 @@ void rr() {
 					printf("Time %d: %s finished\n", timer, procs[i].name);
 					finished++;
 					
-					procs[i].turnaround = timer - procs[i].arrival;
-					
-					printf("I am %s and my turnaround was %d and wait %d\n", procs[i].name, procs[i].turnaround, procs[i].wait);
-
-					
+					procs[i].turnaround = timer - procs[i].arrival;	
 					procs[i].wait = procs[i].turnaround - procs[i].wait;
 				}
 				
