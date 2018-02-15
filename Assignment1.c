@@ -15,6 +15,8 @@ typedef struct Process {
 	char name[100];
 	int arrival;
 	int burst;
+	int wait;
+	int turnaround;
 } Process;
 
 char algorithm[100];
@@ -134,25 +136,170 @@ void fcfs() {
 
 // Shortest Job First (preemptive)
 void sjf() {
-
+	
+	int i,j,k,waitCounter=0,procCounter=0,check=0,turnCounter;
+	
+	Process *waiting[numProcs], temp, *running=NULL, *tempPoint,turnaround[numProcs];
+	
+	printHeader();
+	
+	//ordering the procs by arrival( Bubble Sort :( ).
+	for(i=0;i<numProcs;i++){
+		for(j=0;j<numProcs;j++){
+		
+			if(procs[j].arrival>procs[j+1].arrival){
+				temp=procs[j];
+				procs[j]=procs[j+1];
+				procs[j+1]=temp;
+			}
+			else if(procs[j].arrival==procs[j+1].arrival && procs[j].burst > procs[j+1].burst){
+				temp=procs[j];
+				procs[j]=procs[j+1];
+				procs[j+1]=temp;
+			}
+		}
+	}
+	
+	for(i=0;i<=runTime;i++){
+		
+		//insert into waiting queue on arrival.
+		while(procs[procCounter].arrival==i){
+			
+			// add proc into waiting queue
+			waiting[waitCounter]=&procs[procCounter];
+			waiting[waitCounter]->wait=0;
+			waitCounter++;
+			
+			//print arrival 
+			printf("Time %d: %s arrived\n", i, procs[procCounter].name);
+			procCounter++;
+			
+			//sort queue if more than one waiting proccess.
+			if(waitCounter>1){
+				for(j=0;j<waitCounter;j++){
+					for(k=0;k<waitCounter-1;k++){
+						if(waiting[k]->burst>waiting[k+1]->burst){
+							tempPoint=waiting[k];
+							waiting[k]=waiting[k+1];
+							waiting[k+1]=tempPoint;
+						}
+			
+					}
+				}
+			}
+			
+			// Shows that there was a proc added to wait queue.
+			check=1;
+		}
+		
+			//decrement runtime.
+		if(running!=NULL){
+			running->burst--;
+		}
+		
+			
+		// When there is a proc added to wait make sure that it does not have a shorter job
+		if(check==1){
+			
+			if(running==NULL){ //if empty
+				running=waiting[0];
+			}
+			else if(running->burst>waiting[0]->burst){ // if burst of waiting is less than running.
+				waiting[waitCounter]=running;
+				waitCounter++;
+				running=waiting[0];
+				
+				// Sort the waiting list after updating running proc.
+				for(j=0;j<waitCounter;j++){
+					for(k=0;k<waitCounter-1;k++){
+						if(waiting[k]->burst>waiting[k+1]->burst){
+							tempPoint=waiting[k];
+							waiting[k]=waiting[k+1];
+							waiting[k+1]=tempPoint;
+						}
+			
+					}
+				}
+				
+			}
+			
+			//deletes from waiting list.
+			for(j=0;j<waitCounter-1;j++){
+				waiting[j]=waiting[j+1];
+			}
+			waitCounter--;
+		
+			printf("Time %d: %s selected (burst %d)\n",i,running->name,running->burst);
+			// toggle the check off once proper positioning is checked.
+			check=0;	
+		}
+		
+		//When the proc finishes
+		if(running!=NULL && running->burst==0){
+			printf("Time %d: %s finished\n",i,running->name);
+			
+			//assigns turnaround time to an array with name.
+			strcpy(turnaround[turnCounter].name,running->name);
+			turnaround[turnCounter].turnaround=i-running->arrival;
+			turnaround[turnCounter].wait=running->wait;
+			turnCounter++;
+			//Set new proc to be running.
+			if(waiting[0]->burst>0){
+				
+				running=waiting[0];
+			
+				//delete proc from list.
+				for(j=0;j<waitCounter-1;j++){
+					waiting[j]=waiting[j+1];
+				}
+				
+				waitCounter--;
+			
+				//print out new selected proc
+				printf("Time %d: %s slected (burst %d)\n",i,running->name,running->burst);
+			}
+			else{
+				
+				running=NULL;
+				
+			}
+		}
+		
+		//Print out runtime.	
+ 		if(running==NULL && i!=runTime){
+			
+			printf("Time %d: IDLE\n",i);
+		}
+		
+		// Increment wait for all those in waiting list.
+		for(j=0;j<waitCounter && waitCounter>0;j++){
+			waiting[j]->wait++;
+		}	
+		
+	}
+	printf("Finished at time %d\n\n",runTime);
+	
+	for(i=0;i<numProcs;i++){
+		printf("%s wait %d turnaround %d\n",turnaround[i].name,turnaround[i].wait,turnaround[i].turnaround);
+	}
 }
 
 // Round-Robin ****I need to test this and make it more efficient****
 void rr() {
 	
-	int timer = 0, finished = 0, len = 0, arrival, burst, i, j, k;
+	int timer = 0, finished = 0, len = 0, running = 1, start = 0;
+	int arrival, burst, i, j, k;
 	
-	while(1)
-	{
-		for(i = 0; i < numProcs; i++)
-		{
+	while(running) {
+		for(i = 0; i < numProcs; i++) {
 			arrival = procs[i].arrival;
 			burst = procs[i].burst;
 		
-			if(arrival <= timer && burst > 0)
-			{
+			if(arrival <= timer && burst > 0) {
+				start = 1;
+				
 				if(arrival == timer)
-					printf("Time %d: %s arrived\n", timer, procs[i].name);
+					procs[i].wait = burst;
 				
 				// Determine how long the process is going to run (the quantum
 				// or its burst, whichever is smaller).
@@ -167,10 +314,8 @@ void rr() {
 				procs[i].burst -= len;
 				
 				// Check if other processes arrived during the burst.
-				for(j = timer + 1; j <= timer + len; j++)
-				{
-					for(k = 0; k < numProcs; k++)
-					{
+				for(j = timer + 1; j <= timer + len; j++) {
+					for(k = 0; k < numProcs; k++) {
 						if(procs[k].arrival == j)
 							printf("Time %d: %s arrived\n", j, procs[k].name);
 					}
@@ -179,37 +324,82 @@ void rr() {
 				timer += len;
 				
 				// Check if the current process has finished.
-				if(procs[i].burst == 0)
-				{
+				if(procs[i].burst == 0) {
 					printf("Time %d: %s finished\n", timer, procs[i].name);
 					finished++;
+					
+					procs[i].turnaround = timer - procs[i].arrival;
+					
+					printf("I am %s and my turnaround was %d and wait %d\n", procs[i].name, procs[i].turnaround, procs[i].wait);
+
+					
+					procs[i].wait = procs[i].turnaround - procs[i].wait;
 				}
 				
-				// The machine is idle if all processes have finished.
-				if(finished == numProcs)
-					printf("Time %d: Idle\n", timer++);
+				if(finished == numProcs || timer >= runTime)
+					break;
 			}
 		}
+		
+		if(!start) {
+			printf("Time %d: Idle\n", timer);
+			timer++;
+		}
 	
-		// Break the loop if all of the processes have finished.
-		if(finished == numProcs)
-		{
+		// Break the loop if all of the processes have finished or if time has
+		// ran out.
+		if(finished == numProcs) {		
+			if(timer < runTime) {
+				for(i = timer; i < runTime; i++) {
+					printf("Time %d: Idle\n", i);
+					timer++;
+				}
+			}
+
+			printf("Finished at time %d\n", timer);
+			break;
+		} else if(timer >= runTime) {
 			printf("Finished at time %d\n", timer);
 			break;
 		}
 	}
+	
+	printResults();
 }
 
 // Prints out header for all algorithms
 void printHeader() {
 
 	printf("%d processes\n", numProcs);
-	printf("Using %s\n", algorithm);
-	
-	if(strcmp(algorithm, "rr") == 0)
+
+	if(strcmp(algorithm, "fcfs") == 0) {
+		printf("Using First-Come First-Serve\n");
+	} else if(strcmp(algorithm, "sjf") == 0) {
+		printf("Using Shortest Job First (Pre)\n");
+	} else if(strcmp(algorithm, "rr") == 0) {
+		printf("Using Round-Robin\n");
 		printf("Quantum %d\n", quantum);
+	}
 		
-	printf("\n\n");
+	printf("\n");
+}
+
+void printResults() {
+	
+	int i;
+	
+	printf("\n");
+	
+	for(i = 0; i < numProcs; i++)
+		printf("%s wait %d turnaround %d\n", procs[i].name, procs[i].wait, procs[i].turnaround);
+}
+
+void printProcessInfo() {
+	int i;
+	for(i = 0; i < numProcs; i++) {
+		printf("Process: %s\n    arrival: %d\n    burst: %d\n", procs[i].name, procs[i].arrival, procs[i].burst);
+	}
+	printf("\n");
 }
 
 void printProcessInfo() {
@@ -238,12 +428,17 @@ void readInput() {
 	
 	if(strcmp(algorithm, "rr") == 0)
 		fscanf(ifp, "quantum %d %*[^\n]%*c", &quantum);
+	else
+		fscanf(ifp, "%*[^\n]%*c");
 	
 	procs = malloc(sizeof(Process) * numProcs);
 	
-	for(i = 0; i < numProcs; i++)
+	for(i = 0; i < numProcs; i++) {
 		fscanf(ifp, "process %*s %s arrival %d burst %d\n", procs[i].name, &procs[i].arrival, &procs[i].burst);
-	
+		
+		procs[i].wait = procs[i].burst;
+	}
+		
 	fclose(ifp);
 }
 
