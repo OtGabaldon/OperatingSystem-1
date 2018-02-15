@@ -15,6 +15,7 @@ typedef struct Process {
 	char name[100];
 	int arrival;
 	int burst;
+	int turnaround;
 } Process;
 
 char algorithm[100];
@@ -48,7 +49,140 @@ void fcfs() {
 
 // Shortest Job First (preemptive)
 void sjf() {
-
+	
+	int i,j,k,waitCounter=0,procCounter=0,check=0,turnCounter;
+	
+	Process *waiting[numProcs], temp, *running=NULL, *tempPoint,turnaround[numProcs];
+	
+	
+	//ordering the procs by arrival( Bubble Sort :( ).
+	for(i=0;i<numProcs;i++){
+		for(j=0;j<numProcs;j++){
+		
+			if(procs[j].arrival>procs[j+1].arrival){
+				temp=procs[j];
+				procs[j]=procs[j+1];
+				procs[j+1]=temp;
+			}
+			else if(procs[j].arrival==procs[j+1].arrival && procs[j].burst > procs[j+1].burst){
+				temp=procs[j];
+				procs[j]=procs[j+1];
+				procs[j+1]=temp;
+			}
+		}
+	}
+	
+	for(i=0;i<=runTime;i++){
+		
+		//insert into waiting queue on arrival.
+		while(procs[procCounter].arrival==i){
+			
+			// add proc into waiting queue
+			waiting[waitCounter]=&procs[procCounter];
+			waitCounter++;
+			
+			//print arrival 
+			printf("Time %d: %s arrived\n", i, procs[procCounter].name);
+			procCounter++;
+			
+			//sort queue if more than one waiting proccess.
+			if(waitCounter>1){
+				for(j=0;j<waitCounter;j++){
+					for(k=0;k<waitCounter-1;k++){
+						if(waiting[k]->burst>waiting[k+1]->burst){
+							tempPoint=waiting[k];
+							waiting[k]=waiting[k+1];
+							waiting[k+1]=tempPoint;
+						}
+			
+					}
+				}
+			}
+			
+			// Shows that there was a proc added to wait queue.
+			check=1;
+		}
+		
+		// When there is a proc added to wait make sure that it does not have a shorter job
+		if(check==1){
+			
+			if(running==NULL){ //if empty
+				running=waiting[0];
+			}
+			else if(running->burst>waiting[0]->burst){ // if burst of waiting is less than running.
+				waiting[waitCounter]=running;
+				waitCounter++;
+				running=waiting[0];
+				
+				// Sort the waiting list after updating running proc.
+				for(j=0;j<waitCounter;j++){
+					for(k=0;k<waitCounter-1;k++){
+						if(waiting[k]->burst>waiting[k+1]->burst){
+							tempPoint=waiting[k];
+							waiting[k]=waiting[k+1];
+							waiting[k+1]=tempPoint;
+						}
+			
+					}
+				}
+				
+			}
+			
+			//deletes from waiting list.
+			for(j=0;j<waitCounter-1;j++){
+				waiting[j]=waiting[j+1];
+			}
+			waitCounter--;
+		
+			printf("Time %d: %s selected (burst %d)\n",i,running->name,running->burst);
+			// toggle the check off once proper positioning is checked.
+			check=0;	
+		}
+		
+		//decrement runtime.
+		if(running!=NULL){
+		
+			printf("Running %s burst %d to",running->name, running->burst);
+			running->burst--;
+			printf("%d\n",running->burst);
+		}
+		else
+			printf("Time %d: IDLE\n",i);
+		
+		
+		//When the proc finishes
+		if(running!=NULL && running->burst==0){
+			printf("Time %d: %s finished\n",i,running->name);
+			
+			//assigns turnaround time to an array with name.
+			strcpy(turnaround[turnCounter].name,running->name);
+			turnaround[turnCounter].turnaround=i-running->arrival;
+			
+			//Set new proc to be running.
+			if(waiting[0]->burst>0){
+				
+				running=waiting[0];
+			
+				//delete proc from list.
+				for(j=0;j<waitCounter-1;j++){
+					waiting[j]=waiting[j+1];
+				}
+				
+				waitCounter--;
+			
+				//print out new selected proc
+				printf("Time %d: %s slected (burst %d)\n",i,running->name,running->burst);
+			}
+			else{
+				
+				running=NULL;
+				
+			}
+		}
+		
+			
+	}
+	printf("Finished at time %d\n",runTime);
 }
 
 // Round-Robin ****I need to test this and make it more efficient****
@@ -149,6 +283,7 @@ void readInput() {
 	
 	for(i = 0; i < numProcs; i++)
 		fscanf(ifp, "process %*s %s arrival %d burst %d\n", procs[i].name, &procs[i].arrival, &procs[i].burst);
+		
 	
 	fclose(ifp);
 }
