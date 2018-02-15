@@ -15,6 +15,7 @@ typedef struct Process {
 	char name[100];
 	int arrival;
 	int burst;
+	int wait;
 	int turnaround;
 	int wait;
 } Process;
@@ -27,12 +28,15 @@ void fcfs();
 void sjf();
 void rr();
 void printHeader();
+void printResults();
+void printProcessInfo();
 void readInput();
 
 int main () {
 
 	readInput();
-	
+	printHeader();
+
 	if(strcmp(algorithm, "fcfs") == 0)
 		fcfs();
 	else if(strcmp(algorithm, "sjf") == 0)
@@ -46,6 +50,90 @@ int main () {
 // First-Come First-Serve
 void fcfs() {
 
+	int ordered[numProcs];
+	int timer = 0, finished = 0, lastArrival, iter, arrival, burst, earliest, i, j, k;
+
+	// Create an array for ordering the processes by arrival
+	lastArrival = procs[0].arrival;
+	for(i = 1; i < numProcs; i++) {
+		if(lastArrival < procs[i].arrival)
+			lastArrival = procs[i].arrival;
+	}
+
+	// Order the array using a histogram sort
+	int arrivalBucket[lastArrival + 1];
+	for(i = 0; i < lastArrival + 1; i++) {
+		arrivalBucket[i] = -1;
+	}
+	for(i = 0; i < numProcs; i++) {
+		arrivalBucket[procs[i].arrival] = i;
+	}
+	iter = 0;
+	for (i = 0; i < lastArrival + 1; i++) {
+		if(arrivalBucket[i] > -1) {
+			ordered[iter] = arrivalBucket[i];
+			iter++;
+		}
+	}
+
+	// Runs First-Come First-Serve Algorithm until each ordered process has finished or
+	// time has run out
+	while(1) {
+		for(i = 0; i < numProcs; i++) {
+			arrival = procs[ordered[i]].arrival;
+			burst = procs[ordered[i]].burst;
+
+			// Select a queued process
+			if(arrival <= timer) {
+				if(arrival == timer) {
+					printf("Time %d: %s arrived\n", timer, procs[ordered[i]].name);
+				}
+
+				printf("Time %d: %s selected (burst %d)\n", timer, procs[ordered[i]].name, burst);
+
+				// Check if the next processes to run have arrived
+				for(j = timer + 1; j <= timer + procs[ordered[i]].burst; j++) {
+					for(k = i; k < numProcs; k++) {
+						if(procs[ordered[k]].arrival == j) {
+							printf("Time %d: %s arrived\n", j, procs[ordered[k]].name);
+						}
+					}
+				}
+
+				// Add the current processes burst time to the time
+				// and break if the process has gone past the allotted run time
+				timer += procs[ordered[i]].burst;
+				if(timer > runTime) 
+					break;
+
+				procs[ordered[i]].burst = 0;
+				printf("Time %d: %s finished\n", timer, procs[ordered[i]].name);
+				finished++;
+
+				// Break if the timer has reached the allotted run time
+				if(timer == runTime) 
+					break;
+
+				if(finished == numProcs)
+					printf("Time %d: Idle\n", timer++);
+			} else {
+				// Print Idle and set timer to the next arrival time if no process has
+				// arrived yet
+				printf("Time %d: Idle\n", timer);
+				timer = arrival;
+				i--;
+			}
+		}
+		// Print Finished at last process completion are at run time if a process exceeded
+		// its allotted time
+		if(finished == numProcs) {
+			printf("Finished at time %d\n", timer);
+			break;
+		} else if (timer >= runTime) {
+			printf("Finished at time %d\n", runTime);
+			break;
+		}
+	}
 }
 
 // Shortest Job First (preemptive)
@@ -204,19 +292,16 @@ void rr() {
 	int timer = 0, finished = 0, len = 0, running = 1, start = 0;
 	int arrival, burst, i, j, k;
 	
-	while(running)
-	{
-		for(i = 0; i < numProcs; i++)
-		{
+	while(running) {
+		for(i = 0; i < numProcs; i++) {
 			arrival = procs[i].arrival;
 			burst = procs[i].burst;
 		
-			if(arrival <= timer && burst > 0)
-			{
+			if(arrival <= timer && burst > 0) {
 				start = 1;
 				
 				if(arrival == timer)
-					printf("Time %d: %s arrived\n", timer, procs[i].name);
+					procs[i].wait = burst;
 				
 				// Determine how long the process is going to run (the quantum
 				// or its burst, whichever is smaller).
@@ -231,10 +316,8 @@ void rr() {
 				procs[i].burst -= len;
 				
 				// Check if other processes arrived during the burst.
-				for(j = timer + 1; j <= timer + len; j++)
-				{
-					for(k = 0; k < numProcs; k++)
-					{
+				for(j = timer + 1; j <= timer + len; j++) {
+					for(k = 0; k < numProcs; k++) {
 						if(procs[k].arrival == j)
 							printf("Time %d: %s arrived\n", j, procs[k].name);
 					}
@@ -243,10 +326,16 @@ void rr() {
 				timer += len;
 				
 				// Check if the current process has finished.
-				if(procs[i].burst == 0)
-				{
+				if(procs[i].burst == 0) {
 					printf("Time %d: %s finished\n", timer, procs[i].name);
 					finished++;
+					
+					procs[i].turnaround = timer - procs[i].arrival;
+					
+					printf("I am %s and my turnaround was %d and wait %d\n", procs[i].name, procs[i].turnaround, procs[i].wait);
+
+					
+					procs[i].wait = procs[i].turnaround - procs[i].wait;
 				}
 				
 				if(finished == numProcs || timer >= runTime)
@@ -254,20 +343,16 @@ void rr() {
 			}
 		}
 		
-		if(!start)
-		{
+		if(!start) {
 			printf("Time %d: Idle\n", timer);
 			timer++;
 		}
 	
 		// Break the loop if all of the processes have finished or if time has
 		// ran out.
-		if(finished == numProcs)
-		{		
-			if(timer < runTime)
-			{
-				for(i = timer; i < runTime; i++)
-				{
+		if(finished == numProcs) {		
+			if(timer < runTime) {
+				for(i = timer; i < runTime; i++) {
 					printf("Time %d: Idle\n", i);
 					timer++;
 				}
@@ -275,29 +360,46 @@ void rr() {
 
 			printf("Finished at time %d\n", timer);
 			break;
-		}
-		else if(timer >= runTime)
-		{
+		} else if(timer >= runTime) {
 			printf("Finished at time %d\n", timer);
 			break;
 		}
 	}
+	
+	printResults();
 }
 
 // Prints out header for all algorithms
 void printHeader() {
 
 	printf("%d processes\n", numProcs);
-	if(strcmp(algorithm,"sjf")==0){
+
+	if(strcmp(algorithm, "fcfs") == 0) {
+		printf("Using First-Come First-Serve\n");
+	} else if(strcmp(algorithm, "sjf") == 0) {
 		printf("Using Shortest Job First (Pre)\n");
-	}
-	else if(strcmp(algorithm,"fcfs")==0){
-		printf("First-Come First-Served\n");
-	}
-	else{
-	
-		printf("Using Round-Robin");
+	} else if(strcmp(algorithm, "rr") == 0) {
+		printf("Using Round-Robin\n");
 		printf("Quantum %d\n", quantum);
+	}
+		
+	printf("\n");
+}
+
+void printResults() {
+	
+	int i;
+	
+	printf("\n");
+	
+	for(i = 0; i < numProcs; i++)
+		printf("%s wait %d turnaround %d\n", procs[i].name, procs[i].wait, procs[i].turnaround);
+}
+
+void printProcessInfo() {
+	int i;
+	for(i = 0; i < numProcs; i++) {
+		printf("Process: %s\n    arrival: %d\n    burst: %d\n", procs[i].name, procs[i].arrival, procs[i].burst);
 	}
 	printf("\n");
 }
@@ -323,10 +425,12 @@ void readInput() {
 	
 	procs = malloc(sizeof(Process) * numProcs);
 	
-	for(i = 0; i < numProcs; i++)
+	for(i = 0; i < numProcs; i++) {
 		fscanf(ifp, "process %*s %s arrival %d burst %d\n", procs[i].name, &procs[i].arrival, &procs[i].burst);
 		
-	
+		procs[i].wait = procs[i].burst;
+	}
+		
 	fclose(ifp);
 }
 
