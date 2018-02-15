@@ -386,7 +386,7 @@ void printHeader() {
 	printf("%d processes\n", numProcs);
 
 	if(strcmp(algorithm, "fcfs") == 0) {
-		printf("Using First-Come First-Serve\n");
+		printf("Using First Come First Served\n");
 	} else if(strcmp(algorithm, "sjf") == 0) {
 		printf("Using Shortest Job First (Pre)\n");
 	} else if(strcmp(algorithm, "rr") == 0) {
