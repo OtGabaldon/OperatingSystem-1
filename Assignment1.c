@@ -277,15 +277,12 @@ void rr() {
 	int timer = 0, finished = 0, len = 0, running = 1, start = 0;
 	int arrival, burst, i, j, k;
 	
-	while(running)
-	{
-		for(i = 0; i < numProcs; i++)
-		{
+	while(running) {
+		for(i = 0; i < numProcs; i++) {
 			arrival = procs[i].arrival;
 			burst = procs[i].burst;
 		
-			if(arrival <= timer && burst > 0)
-			{
+			if(arrival <= timer && burst > 0) {
 				start = 1;
 				
 				if(arrival == timer)
@@ -304,10 +301,8 @@ void rr() {
 				procs[i].burst -= len;
 				
 				// Check if other processes arrived during the burst.
-				for(j = timer + 1; j <= timer + len; j++)
-				{
-					for(k = 0; k < numProcs; k++)
-					{
+				for(j = timer + 1; j <= timer + len; j++) {
+					for(k = 0; k < numProcs; k++) {
 						if(procs[k].arrival == j)
 							printf("Time %d: %s arrived\n", j, procs[k].name);
 					}
@@ -316,8 +311,7 @@ void rr() {
 				timer += len;
 				
 				// Check if the current process has finished.
-				if(procs[i].burst == 0)
-				{
+				if(procs[i].burst == 0) {
 					printf("Time %d: %s finished\n", timer, procs[i].name);
 					finished++;
 				}
@@ -327,20 +321,16 @@ void rr() {
 			}
 		}
 		
-		if(!start)
-		{
+		if(!start) {
 			printf("Time %d: Idle\n", timer);
 			timer++;
 		}
 	
 		// Break the loop if all of the processes have finished or if time has
 		// ran out.
-		if(finished == numProcs)
-		{		
-			if(timer < runTime)
-			{
-				for(i = timer; i < runTime; i++)
-				{
+		if(finished == numProcs) {		
+			if(timer < runTime) {
+				for(i = timer; i < runTime; i++) {
 					printf("Time %d: Idle\n", i);
 					timer++;
 				}
@@ -348,9 +338,7 @@ void rr() {
 
 			printf("Finished at time %d\n", timer);
 			break;
-		}
-		else if(timer >= runTime)
-		{
+		} else if(timer >= runTime) {
 			printf("Finished at time %d\n", timer);
 			break;
 		}
