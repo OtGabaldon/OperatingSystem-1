@@ -16,6 +16,7 @@ typedef struct Process {
 	int arrival;
 	int burst;
 	int turnaround;
+	int wait;
 } Process;
 
 char algorithm[100];
@@ -54,6 +55,7 @@ void sjf() {
 	
 	Process *waiting[numProcs], temp, *running=NULL, *tempPoint,turnaround[numProcs];
 	
+	printHeader();
 	
 	//ordering the procs by arrival( Bubble Sort :( ).
 	for(i=0;i<numProcs;i++){
@@ -79,6 +81,7 @@ void sjf() {
 			
 			// add proc into waiting queue
 			waiting[waitCounter]=&procs[procCounter];
+			waiting[waitCounter]->wait=0;
 			waitCounter++;
 			
 			//print arrival 
@@ -103,6 +106,12 @@ void sjf() {
 			check=1;
 		}
 		
+			//decrement runtime.
+		if(running!=NULL){
+			running->burst--;
+		}
+		
+			
 		// When there is a proc added to wait make sure that it does not have a shorter job
 		if(check==1){
 			
@@ -139,17 +148,6 @@ void sjf() {
 			check=0;	
 		}
 		
-		//decrement runtime.
-		if(running!=NULL){
-		
-			printf("Running %s burst %d to",running->name, running->burst);
-			running->burst--;
-			printf("%d\n",running->burst);
-		}
-		else
-			printf("Time %d: IDLE\n",i);
-		
-		
 		//When the proc finishes
 		if(running!=NULL && running->burst==0){
 			printf("Time %d: %s finished\n",i,running->name);
@@ -157,7 +155,8 @@ void sjf() {
 			//assigns turnaround time to an array with name.
 			strcpy(turnaround[turnCounter].name,running->name);
 			turnaround[turnCounter].turnaround=i-running->arrival;
-			
+			turnaround[turnCounter].wait=running->wait;
+			turnCounter++;
 			//Set new proc to be running.
 			if(waiting[0]->burst>0){
 				
@@ -180,9 +179,23 @@ void sjf() {
 			}
 		}
 		
+		//Print out runtime.	
+ 		if(running==NULL && i!=runTime){
 			
+			printf("Time %d: IDLE\n",i);
+		}
+		
+		// Increment wait for all those in waiting list.
+		for(j=0;j<waitCounter && waitCounter>0;j++){
+			waiting[j]->wait++;
+		}	
+		
 	}
-	printf("Finished at time %d\n",runTime);
+	printf("Finished at time %d\n\n",runTime);
+	
+	for(i=0;i<numProcs;i++){
+		printf("%s wait %d turnaround %d\n",turnaround[i].name,turnaround[i].wait,turnaround[i].turnaround);
+	}
 }
 
 // Round-Robin ****I need to test this and make it more efficient****
@@ -275,12 +288,18 @@ void rr() {
 void printHeader() {
 
 	printf("%d processes\n", numProcs);
-	printf("Using %s\n", algorithm);
+	if(strcmp(algorithm,"sjf")==0){
+		printf("Using Shortest Job First (Pre)\n");
+	}
+	else if(strcmp(algorithm,"fcfs")==0){
+		printf("First-Come First-Served\n");
+	}
+	else{
 	
-	if(strcmp(algorithm, "rr") == 0)
+		printf("Using Round-Robin");
 		printf("Quantum %d\n", quantum);
-		
-	printf("\n\n");
+	}
+	printf("\n");
 }
 
 // Processes input from input file
