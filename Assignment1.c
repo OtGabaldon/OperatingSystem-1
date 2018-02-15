@@ -88,7 +88,13 @@ void fcfs() {
 					printf("Time %d: %s arrived\n", timer, procs[ordered[i]].name);
 				}
 
+				// Select the current process and set its wait time to the current time minus
+				// the time it arrived
 				printf("Time %d: %s selected (burst %d)\n", timer, procs[ordered[i]].name, burst);
+				procs[ordered[i]].wait = timer - procs[ordered[i]].arrival;
+
+				// Set the process's turnaround time to the time it waited plus the time it ran
+				procs[ordered[i]].turnaround = procs[ordered[i]].wait + procs[ordered[i]].burst;
 
 				// Check if the next processes to run have arrived
 				for(j = timer + 1; j <= timer + procs[ordered[i]].burst; j++) {
@@ -132,6 +138,12 @@ void fcfs() {
 			printf("Finished at time %d\n", runTime);
 			break;
 		}
+	}
+
+	// Print each process wait and turn around time
+	printf("\n");
+	for(i=0; i<numProcs; i++) {
+		printf("%s wait %d turnaround %d\n",procs[i].name,procs[i].wait,procs[i].turnaround);
 	}
 }
 
