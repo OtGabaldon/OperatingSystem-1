@@ -17,7 +17,6 @@ typedef struct Process {
 	int burst;
 	int wait;
 	int turnaround;
-	int wait;
 } Process;
 
 char algorithm[100];
