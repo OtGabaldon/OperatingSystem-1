@@ -422,6 +422,8 @@ void readInput() {
 	
 	if(strcmp(algorithm, "rr") == 0)
 		fscanf(ifp, "quantum %d %*[^\n]%*c", &quantum);
+	else
+		fscanf(ifp, "%*[^\n]%*c");
 	
 	procs = malloc(sizeof(Process) * numProcs);
 	

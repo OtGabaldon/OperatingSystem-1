@@ -1,9 +1,0 @@
-processcount 4        # Read 5 processes
-runfor 27            # Run for 15 time units
-use rr                # Can be fcfs, sjf, or rr
-quantum 2             # Time quantum – only if using rr
-process name P1 arrival 0 burst 13
-process name P2 arrival 0 burst 4
-process name P3 arrival 0 burst 2
-process name P4 arrival 0 burst 1
-end
