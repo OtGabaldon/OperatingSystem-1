@@ -26,12 +26,14 @@ void fcfs();
 void sjf();
 void rr();
 void printHeader();
+void printProcessInfo();
 void readInput();
 
 int main () {
 
 	readInput();
-	
+	printHeader();
+
 	if(strcmp(algorithm, "fcfs") == 0)
 		fcfs();
 	else if(strcmp(algorithm, "sjf") == 0)
@@ -45,6 +47,90 @@ int main () {
 // First-Come First-Serve
 void fcfs() {
 
+	int ordered[numProcs];
+	int timer = 0, finished = 0, lastArrival, iter, arrival, burst, earliest, i, j, k;
+
+	// Create an array for ordering the processes by arrival
+	lastArrival = procs[0].arrival;
+	for(i = 1; i < numProcs; i++) {
+		if(lastArrival < procs[i].arrival)
+			lastArrival = procs[i].arrival;
+	}
+
+	// Order the array using a histogram sort
+	int arrivalBucket[lastArrival + 1];
+	for(i = 0; i < lastArrival + 1; i++) {
+		arrivalBucket[i] = -1;
+	}
+	for(i = 0; i < numProcs; i++) {
+		arrivalBucket[procs[i].arrival] = i;
+	}
+	iter = 0;
+	for (i = 0; i < lastArrival + 1; i++) {
+		if(arrivalBucket[i] > -1) {
+			ordered[iter] = arrivalBucket[i];
+			iter++;
+		}
+	}
+
+	// Runs First-Come First-Serve Algorithm until each ordered process has finished or
+	// time has run out
+	while(1) {
+		for(i = 0; i < numProcs; i++) {
+			arrival = procs[ordered[i]].arrival;
+			burst = procs[ordered[i]].burst;
+
+			// Select a queued process
+			if(arrival <= timer) {
+				if(arrival == timer) {
+					printf("Time %d: %s arrived\n", timer, procs[ordered[i]].name);
+				}
+
+				printf("Time %d: %s selected (burst %d)\n", timer, procs[ordered[i]].name, burst);
+
+				// Check if the next processes to run have arrived
+				for(j = timer + 1; j <= timer + procs[ordered[i]].burst; j++) {
+					for(k = i; k < numProcs; k++) {
+						if(procs[ordered[k]].arrival == j) {
+							printf("Time %d: %s arrived\n", j, procs[ordered[k]].name);
+						}
+					}
+				}
+
+				// Add the current processes burst time to the time
+				// and break if the process has gone past the allotted run time
+				timer += procs[ordered[i]].burst;
+				if(timer > runTime) 
+					break;
+
+				procs[ordered[i]].burst = 0;
+				printf("Time %d: %s finished\n", timer, procs[ordered[i]].name);
+				finished++;
+
+				// Break if the timer has reached the allotted run time
+				if(timer == runTime) 
+					break;
+
+				if(finished == numProcs)
+					printf("Time %d: Idle\n", timer++);
+			} else {
+				// Print Idle and set timer to the next arrival time if no process has
+				// arrived yet
+				printf("Time %d: Idle\n", timer);
+				timer = arrival;
+				i--;
+			}
+		}
+		// Print Finished at last process completion are at run time if a process exceeded
+		// its allotted time
+		if(finished == numProcs) {
+			printf("Finished at time %d\n", timer);
+			break;
+		} else if (timer >= runTime) {
+			printf("Finished at time %d\n", runTime);
+			break;
+		}
+	}
 }
 
 // Shortest Job First (preemptive)
@@ -281,6 +367,14 @@ void printHeader() {
 		printf("Quantum %d\n", quantum);
 		
 	printf("\n\n");
+}
+
+void printProcessInfo() {
+	int i;
+	for(i = 0; i < numProcs; i++) {
+		printf("Process: %s\n    arrival: %d\n    burst: %d\n", procs[i].name, procs[i].arrival, procs[i].burst);
+	}
+	printf("\n");
 }
 
 // Processes input from input file
