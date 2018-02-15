@@ -15,6 +15,7 @@ typedef struct Process {
 	char name[100];
 	int arrival;
 	int burst;
+	int wait;
 	int turnaround;
 } Process;
 
@@ -26,6 +27,7 @@ void fcfs();
 void sjf();
 void rr();
 void printHeader();
+void printResults();
 void printProcessInfo();
 void readInput();
 
@@ -314,6 +316,8 @@ void rr() {
 				if(procs[i].burst == 0) {
 					printf("Time %d: %s finished\n", timer, procs[i].name);
 					finished++;
+					
+					procs[i].turnaround = timer - procs[i].arrival;
 				}
 				
 				if(finished == numProcs || timer >= runTime)
@@ -343,18 +347,35 @@ void rr() {
 			break;
 		}
 	}
+	
+	printResults();
 }
 
 // Prints out header for all algorithms
 void printHeader() {
 
 	printf("%d processes\n", numProcs);
-	printf("Using %s\n", algorithm);
-	
-	if(strcmp(algorithm, "rr") == 0)
+
+	if(strcmp(algorithm, "fcfs") == 0) {
+		printf("Using First-Come First-Serve\n");
+	} else if(strcmp(algorithm, "sjf") == 0) {
+		printf("Using Shortest Job First\n");
+	} else if(strcmp(algorithm, "rr") == 0) {
+		printf("Using Round-Robin\n");
 		printf("Quantum %d\n", quantum);
+	}
 		
-	printf("\n\n");
+	printf("\n");
+}
+
+void printResults() {
+	
+	int i;
+	
+	printf("\n");
+	
+	for(i = 0; i < numProcs; i++)
+		printf("%s wait ? turnaround %d\n", procs[i].name, procs[i].turnaround);
 }
 
 void printProcessInfo() {
