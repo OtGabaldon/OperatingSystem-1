@@ -288,7 +288,7 @@ void rr() {
 				start = 1;
 				
 				if(arrival == timer)
-					printf("Time %d: %s arrived\n", timer, procs[i].name);
+					procs[i].wait = burst;
 				
 				// Determine how long the process is going to run (the quantum
 				// or its burst, whichever is smaller).
@@ -318,6 +318,11 @@ void rr() {
 					finished++;
 					
 					procs[i].turnaround = timer - procs[i].arrival;
+					
+					printf("I am %s and my turnaround was %d and wait %d\n", procs[i].name, procs[i].turnaround, procs[i].wait);
+
+					
+					procs[i].wait = procs[i].turnaround - procs[i].wait;
 				}
 				
 				if(finished == numProcs || timer >= runTime)
@@ -375,7 +380,7 @@ void printResults() {
 	printf("\n");
 	
 	for(i = 0; i < numProcs; i++)
-		printf("%s wait ? turnaround %d\n", procs[i].name, procs[i].turnaround);
+		printf("%s wait %d turnaround %d\n", procs[i].name, procs[i].wait, procs[i].turnaround);
 }
 
 void printProcessInfo() {
@@ -407,10 +412,12 @@ void readInput() {
 	
 	procs = malloc(sizeof(Process) * numProcs);
 	
-	for(i = 0; i < numProcs; i++)
+	for(i = 0; i < numProcs; i++) {
 		fscanf(ifp, "process %*s %s arrival %d burst %d\n", procs[i].name, &procs[i].arrival, &procs[i].burst);
 		
-	
+		procs[i].wait = procs[i].burst;
+	}
+		
 	fclose(ifp);
 }
 
