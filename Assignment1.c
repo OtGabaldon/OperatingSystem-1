@@ -146,34 +146,147 @@ void fcfs() {
 		printf("%s wait %d turnaround %d\n",procs[i].name,procs[i].wait,procs[i].turnaround);
 	}
 }
-
 // Shortest Job First (preemptive)
 void sjf() {
 	
-	int i,j,k,waitCounter=0,procCounter=0,check=0,turnCounter;
+	int i,j,k,arriveCounter=0,waitCounter=0;
 	
-	Process *waiting[numProcs], temp, *running=NULL, *tempPoint,turnaround[numProcs];
+	Process temp, running;
+	running.burst=-1;
+		
+	Process *order = malloc(sizeof(Process)*numProcs);
+	Process *waiting= malloc(sizeof(Process)*numProcs);
 	
-	printHeader();
+	//copying procs to an array so we can keep original order later.
+	for(i=0;i<numProcs;i++){
+		
+		order[i]=procs[i];
+		
+	}
 	
 	//ordering the procs by arrival( Bubble Sort :( ).
-	for(i=0;i<numProcs;i++){
-		for(j=0;j<numProcs;j++){
+	for(i=0;i<numProcs-1;i++){
+		for(j=0;j<numProcs-1;j++){
 		
-			if(procs[j].arrival>procs[j+1].arrival){
-				temp=procs[j];
-				procs[j]=procs[j+1];
-				procs[j+1]=temp;
+			if(order[j].arrival>order[j+1].arrival){
+				temp=order[j];
+				order[j]=order[j+1];
+				order[j+1]=temp;
 			}
-			else if(procs[j].arrival==procs[j+1].arrival && procs[j].burst > procs[j+1].burst){
-				temp=procs[j];
-				procs[j]=procs[j+1];
-				procs[j+1]=temp;
+			else if(order[j].arrival==order[j+1].arrival && order[j].burst > order[j+1].burst){
+				temp=order[j];
+				order[j]=order[j+1];
+				order[j+1]=temp;
 			}
 		}
 	}
 	
-	for(i=0;i<=runTime;i++){
+	//simulates running through the time.
+	for(i=0;i<runTime;i++){
+		
+		//add to waiting list.
+		while(order[arriveCounter].arrival==i){
+			
+			waiting[waitCounter]=order[arriveCounter];
+			printf("Time %d: %s arrived\n",i,order[arriveCounter].name);
+			//process is added to wait queue, thus we need to increment counter.
+			arriveCounter++;
+			
+			//process has arrived to cpu so we need to increment posiiton.
+			waitCounter++;
+			
+			//if there is more than one proc then order them based on burst length.
+			if(waitCounter>1){
+				for(j=0;j<waitCounter-1;j++){
+					for(k=0;k<waitCounter-1;k++){
+						if(waiting[k].burst>waiting[k+1].burst){
+							temp=waiting[k];
+							waiting[k]=waiting[k+1];
+							waiting[k+1]=temp;
+						}
+					}
+				}
+			}
+		}
+		
+		//Decrement counters and see if programs are finished.
+		if(running.burst!=-1){
+			running.burst--;
+			
+			if(running.burst==0){
+				
+				printf("Time %d: %s finished\n",i,running.name);
+				
+				//signal that the program has been removed and running is empty.
+				running.burst=-1;
+			}
+			
+		}
+		
+		
+	//	for(j=0;j<waitCounter;j++){
+	//		printf("Proc %s burst %d\n",waiting[j].name,waiting[j].burst);
+	//	}
+		
+		
+		
+		
+		
+		
+		//choose which program to run
+		
+		// if there is no program running.
+		if(running.burst==-1){
+			
+			// insert shortest burst program into running position.
+			if(waitCounter!=0){
+				running=waiting[0];
+				printf("Time %d: %s selected (burst %d)\n",i,running.name,running.burst);
+				// if there is more than one program waiting move the rest down to proper positions.
+				if(waitCounter>1){
+					for(j=0;j<waitCounter-1;j++){
+						waiting[j]=waiting[j+1];
+					}
+					waiting[j].burst=-1;
+				}
+				//Decrement waiting counter since one proc was sent to running.
+				waitCounter--;
+			}
+			else{
+				printf("Time %d: IDLE\n",i);
+			}
+		
+			
+		}
+		else if(running.burst>waiting[0].burst){
+			
+			// insert shortest burst program into running position and then the running program back into waiting list.
+			temp=running;
+			running=waiting[0];
+			waiting[0]=temp;
+			
+			printf("Time %d: %s selected (burst %d)\n",i,running.name,running.burst);
+			
+			// resort the waiting list to have the shortest program in front.
+			for(j=0;j<waitCounter-1;j++){
+				for(k=0;k<waitCounter-1;k++){
+					if(waiting[k].burst>waiting[k+1].burst){
+						temp=waiting[k];
+						waiting[k]=waiting[k+1];
+						waiting[k+1]=temp;
+					}
+				}
+			}
+			
+			
+		}
+		
+		
+		
+	}
+	printf("Finished at time %d",runTime);
+	
+	/*for(i=0;i<=runTime;i++){
 		
 		//insert into waiting queue on arrival.
 		while(procs[procCounter].arrival==i){
@@ -294,7 +407,7 @@ void sjf() {
 	
 	for(i=0;i<numProcs;i++){
 		printf("%s wait %d turnaround %d\n",turnaround[i].name,turnaround[i].wait,turnaround[i].turnaround);
-	}
+	}*/
 }
 
 // Round-Robin ****I need to test this and make it more efficient****
