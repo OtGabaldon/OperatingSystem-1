@@ -308,7 +308,9 @@ void sjf() {
 	for(i=0;i<numProcs;i++){
 		printf("%s wait %d turnaround %d\n",procs[i].name,procs[i].wait,procs[i].turnaround);;	
 	}
-	
+	free(order);
+	free(waiting);
+	free(finished);
 	
 	/*for(i=0;i<=runTime;i++){
 		
