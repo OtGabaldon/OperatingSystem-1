@@ -35,7 +35,7 @@ int main () {
 
 	readInput();
 	printHeader();
-
+	
 	if(strcmp(algorithm, "fcfs") == 0)
 		fcfs();
 	else if(strcmp(algorithm, "sjf") == 0)
@@ -120,11 +120,11 @@ void fcfs() {
 					break;
 
 				if(finished == numProcs)
-					printf("Time %d: Idle\n", timer++);
+					printf("Time %d: IDLE\n", timer++);
 			} else {
-				// Print Idle and set timer to the next arrival time if no process has
+				// Print IDLE and set timer to the next arrival time if no process has
 				// arrived yet
-				printf("Time %d: Idle\n", timer);
+				printf("Time %d: IDLE\n", timer);
 				timer = arrival;
 				i--;
 			}
@@ -492,7 +492,7 @@ void rr() {
 		}
 		
 		if(!start) {
-			printf("Time %d: Idle\n", timer);
+			printf("Time %d: IDLE\n", timer);
 			timer++;
 		}
 	
@@ -501,7 +501,7 @@ void rr() {
 		if(finished == numProcs) {		
 			if(timer < runTime) {
 				for(i = timer; i < runTime; i++) {
-					printf("Time %d: Idle\n", i);
+					printf("Time %d: IDLE\n", i);
 					timer++;
 				}
 			}
@@ -552,6 +552,67 @@ void printProcessInfo() {
 	printf("\n");
 }
 
+void readInput()
+{
+	FILE* ifp;
+	char string[100];
+	int i;
+	
+	ifp = fopen("processes.txt", "r");
+	
+	if(ifp == NULL) {
+		printf("ERROR: The input file could not be opened.\n");
+		exit(1);
+	}
+	
+	while(fscanf(ifp, "%s", string) != EOF)
+	{
+		if(strcmp(string, "processcount") == 0)
+		{
+			fscanf(ifp, "%d", &numProcs);
+			fscanf(ifp, "%*[^\n]%*c");
+		}
+		else if(strcmp(string, "runfor") == 0)
+		{
+			fscanf(ifp, "%d", &runTime);
+			fscanf(ifp, "%*[^\n]%*c");
+		}
+		else if(strcmp(string, "use") == 0)
+		{
+			fscanf(ifp, "%s", algorithm);
+			fscanf(ifp, "%*[^\n]%*c");
+		}
+		else if(strcmp(string, "quantum") == 0)
+		{
+			fscanf(ifp, "%d", &quantum);
+			fscanf(ifp, "%*[^\n]%*c");
+		}
+		else if(strcmp(string, "process") == 0)
+		{
+			i = 0;
+			
+			procs = malloc(sizeof(Process) * numProcs);
+			
+			fscanf(ifp, "%*s %s %*s %d %*s %d%*[^\n]%*c", procs[i].name, &procs[i].arrival, &procs[i].burst);
+			
+			for(i = 1; i < numProcs; i++)
+			{
+				fscanf(ifp, "%*s %*s %s %*s %d %*s %d%*[^\n]%*c", procs[i].name, &procs[i].arrival, &procs[i].burst);
+				fscanf(ifp, "%*[^\n]%*c");
+			}
+		}
+		else if(strcmp(string, "end") == 0)
+		{
+			return;
+		}
+		else
+		{
+			fscanf(ifp, "%*[^\n]%*c");
+		}
+	}
+}
+
+/*
 // Processes input from input file
 void readInput() {
 	FILE* ifp;
@@ -583,6 +644,7 @@ void readInput() {
 		
 	fclose(ifp);
 }
+*/
 
 // Leaving original readInput method for now just in case we need to change it back.
 
