@@ -550,7 +550,7 @@ void readInput()
 	char string[100];
 	int i;
 	
-	ifp = fopen("processes.txt", "r");
+	ifp = fopen("processes.in", "r");
 	
 	if(ifp == NULL) {
 		printf("ERROR: The input file could not be opened.\n");
