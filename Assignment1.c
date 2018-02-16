@@ -28,7 +28,6 @@ void sjf();
 void rr();
 void printHeader();
 void printResults();
-void printProcessInfo();
 void readInput();
 
 int main () {
@@ -544,14 +543,6 @@ void printResults() {
 		printf("%s wait %d turnaround %d\n", procs[i].name, procs[i].wait, procs[i].turnaround);
 }
 
-void printProcessInfo() {
-	int i;
-	for(i = 0; i < numProcs; i++) {
-		printf("Process: %s\n    arrival: %d\n    burst: %d\n", procs[i].name, procs[i].arrival, procs[i].burst);
-	}
-	printf("\n");
-}
-
 void readInput()
 {
 	FILE* ifp;
@@ -595,10 +586,14 @@ void readInput()
 			
 			fscanf(ifp, "%*s %s %*s %d %*s %d%*[^\n]%*c", procs[i].name, &procs[i].arrival, &procs[i].burst);
 			
+			procs[i].wait = procs[i].burst;
+			
 			for(i = 1; i < numProcs; i++)
 			{
 				fscanf(ifp, "%*s %*s %s %*s %d %*s %d%*[^\n]%*c", procs[i].name, &procs[i].arrival, &procs[i].burst);
 				fscanf(ifp, "%*[^\n]%*c");
+				
+				procs[i].wait = procs[i].burst;
 			}
 		}
 		else if(strcmp(string, "end") == 0)
